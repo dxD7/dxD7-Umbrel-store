@@ -1,0 +1,56 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: dxd7-deluge-vpn_deluge-vpn_1
+      APP_PORT: 8112
+      # Deluge's own web password is the login (change the default!).
+      # Remove the next line to also put Umbrel's login in front of Deluge.
+      PROXY_AUTH_ADD: "false"
+
+  deluge-vpn:
+    # Follows binhex's 2.2 release line (not "latest"), so a future major
+    # version can't change things unexpectedly.
+    image: binhex/arch-delugevpn:2.2
+
+    # binhex documents that WireGuard needs privileged mode plus this sysctl.
+    # OpenVPN-only users can try replacing "privileged: true" with
+    # "cap_add: [NET_ADMIN]" (binhex's OpenVPN examples use only that; untested here).
+    privileged: true
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+
+    # First-run wrapper: shows a setup page on port 8112 until VPN credentials
+    # exist in data/vpn.env, then starts binhex's normal startup (init.sh).
+    command: ["/bin/bash", "/setup/wrapper.sh"]
+
+    # No ports are published to your network on purpose. The web UI is reached
+    # through Umbrel's app proxy, and other Umbrel apps reach Deluge over
+    # Umbrel's internal Docker network. If you need direct access to Privoxy or
+    # the Deluge daemon, uncomment what you need (for Privoxy also set
+    # ENABLE_PRIVOXY=yes in data/vpn.env):
+    # ports:
+    #   - "8118:8118"     # Privoxy
+    #   - "58846:58846"   # Deluge daemon
+
+    volumes:
+      - ${APP_DATA_DIR}/setup:/setup:ro
+      - ${APP_DATA_DIR}/data:/config
+      - ${UMBREL_ROOT}/data/storage/downloads:/data
+      - /etc/localtime:/etc/localtime:ro
+
+    # Fixed settings. Everything user-editable (provider, login, server, LAN,
+    # DNS, advanced options) lives in data/vpn.env, which the wrapper loads at
+    # start; values there override these, except VPN_ENABLED, which is always
+    # forced to "yes" so the app can never run without the VPN and kill switch.
+    environment:
+      - VPN_ENABLED=yes
+      - DELUGE_ENABLE_WEBUI_PASSWORD=yes
+      - DELUGE_DAEMON_LOG_LEVEL=info
+      - DELUGE_WEB_LOG_LEVEL=info
+      - DEBUG=false
+      - UMASK=002
+      - PUID=1000
+      - PGID=1000
+    restart: unless-stopped

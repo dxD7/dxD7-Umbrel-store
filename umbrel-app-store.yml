@@ -1,0 +1,5 @@
+# Store manifest. Shown in the umbrelOS UI as "dxD7's App Store".
+# Every app id in this store must start with the id below
+# (e.g. dxd7-deluge-vpn), and the app folder must match the app id.
+id: "dxd7"
+name: "dxD7's"

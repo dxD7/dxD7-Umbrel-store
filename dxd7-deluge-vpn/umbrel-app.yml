@@ -1,0 +1,41 @@
+manifestVersion: 1
+id: dxd7-deluge-vpn
+category: networking
+name: DelugeVPN
+version: "2.1.1"
+tagline: Deluge torrent client with a built-in VPN and kill switch
+icon: https://raw.githubusercontent.com/dxD7/dxD7-Umbrel-store/main/dxd7-deluge-vpn/icon.png
+description: >-
+  Deluge torrent client that runs entirely inside a VPN tunnel with a kill
+  switch, packaged from the binhex/arch-delugevpn image. Preconfigured for
+  Private Internet Access (WireGuard, with a choice of server location) and
+  switchable to other providers that binhex supports (AirVPN, ProtonVPN, or
+  your own config files).
+
+
+  FIRST LAUNCH: open the app and fill in the setup page with your VPN
+  provider, protocol, username and password. Deluge starts automatically
+  afterwards, which can take a minute or two. The Deluge web UI password is
+  "deluge" by default - please change it in Deluge's preferences after your
+  first login.
+
+
+  This is an unofficial package and is not affiliated with binhex or any VPN
+  provider.
+developer: binhex
+website: https://github.com/binhex/arch-delugevpn
+dependencies: []
+repo: https://github.com/dxD7/dxD7-Umbrel-store
+support: https://github.com/dxD7/dxD7-Umbrel-store/issues
+port: 8112
+gallery: []
+path: ""
+defaultPassword: "deluge"
+releaseNotes: >-
+  Fixes a fresh install showing "Error" for free disk space in Deluge: the
+  incomplete and completed download folders are now created automatically.
+  Also: first-run setup page. Open the app after installing, enter your VPN
+  details, and Deluge starts automatically. Settings are saved in
+  Apps/dxd7-deluge-vpn/data/vpn.env and can still be edited by hand.
+submitter: dxD7
+submission: https://github.com/dxD7/dxD7-Umbrel-store
