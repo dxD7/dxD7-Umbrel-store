@@ -17,5 +17,3 @@ A community [umbrelOS](https://umbrel.com) app store: my Umbrel app packages, in
 | App | Version | Description | Docs |
 |---|---|---|---|
 | DelugeVPN | 2.1.1 | [Deluge](https://deluge-torrent.org/) torrent client that runs entirely inside a VPN tunnel with a kill switch. PIA with WireGuard out of the box, other providers via [binhex](https://github.com/binhex/arch-delugevpn). | [README](dxd7-deluge-vpn/README.md) · [Changelog](dxd7-deluge-vpn/CHANGELOG.md) |
-
-Each app has its own folder, README, and changelog, linked from the table above.
