@@ -1,0 +1,78 @@
+manifestVersion: 1
+id: dxd7-deluge-vpn-test
+category: networking
+name: DelugeVPN (test)
+version: "2.2.0-beta.1"
+tagline: TEST build of DelugeVPN with home-screen widgets
+icon: https://raw.githubusercontent.com/dxD7/dxD7-Umbrel-store/main/dxd7-deluge-vpn/icon.png
+description: >-
+  TEST build of DelugeVPN with Umbrel home-screen widgets. It runs next to the
+  real DelugeVPN app on its own port, so you can try the widgets without
+  touching your working install. Remove it when you're done.
+
+
+  Deluge torrent client that runs entirely inside a VPN tunnel with a kill
+  switch, packaged from the binhex/arch-delugevpn image. FIRST LAUNCH: open the
+  app and fill in the setup page (or copy your vpn.env into this app's data
+  folder). Deluge starts automatically afterwards, which can take a minute or
+  two. The Deluge web UI password is "deluge" by default.
+
+
+  WIDGETS: right-click the Umbrel home screen, choose Edit widgets, and pick
+  DelugeVPN (test). If the widgets only say "waiting for Deluge", open Deluge,
+  go to Preferences > Daemon, tick "Allow Remote Connections", and restart the
+  app.
+
+
+  This is an unofficial package and is not affiliated with binhex or any VPN
+  provider.
+developer: binhex
+website: https://github.com/binhex/arch-delugevpn
+dependencies: []
+repo: https://github.com/dxD7/dxD7-Umbrel-store
+support: https://github.com/dxD7/dxD7-Umbrel-store/issues
+port: 8113
+gallery: []
+path: ""
+defaultPassword: "deluge"
+releaseNotes: >-
+  Test build: adds two home-screen widgets (torrent counts and active torrents).
+widgets:
+  - id: "torrents"
+    type: "four-stats"
+    refresh: "5s"
+    endpoint: "widget-server:3000/widgets/torrents"
+    link: ""
+    example:
+      type: "four-stats"
+      link: ""
+      items:
+        - title: "Downloading"
+          text: "3"
+          subtext: "torrents"
+        - title: "Seeding"
+          text: "1"
+          subtext: "torrent"
+        - title: "Paused"
+          text: "0"
+          subtext: "torrents"
+        - title: "Queued"
+          text: "2"
+          subtext: "torrents"
+  - id: "active"
+    type: "list"
+    refresh: "5s"
+    endpoint: "widget-server:3000/widgets/active"
+    link: ""
+    example:
+      type: "list"
+      link: ""
+      items:
+        - text: "33% • Ubuntu 22.04.3 amd64 ISO image"
+          subtext: "↓4.4Mbps ↑1.2Mbps"
+        - text: "100% • Ubuntu 21.1.0 amd64 ISO image"
+          subtext: "↓0Mbps ↑78Kbps"
+        - text: "100% • Debian 11.0 amd64 ISO image"
+          subtext: "↓0Mbps ↑827Kbps"
+submitter: dxD7
+submission: https://github.com/dxD7/dxD7-Umbrel-store
