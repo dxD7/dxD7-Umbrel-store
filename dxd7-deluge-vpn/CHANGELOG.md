@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.0
+- New: two Umbrel home-screen widgets, torrent counts (four-stats) and active torrents (list).
+- Provided by a small `widget-server` helper that reads Deluge through its own daemon credentials, so no extra password is stored. It answers from a background poll, so Umbrel never waits on Deluge.
+- `WIDGET_SHOW_NAMES=no` on the helper hides torrent names on the home screen.
+- App version now follows Deluge's 2.2 line.
+
 ## 2.1.1
 - Fix: on a fresh install the download folders didn't exist, so Deluge's status bar showed "Error" for free space. The app now creates `/data/incomplete` and `/data/completed` (and any custom folder under `/data` that Deluge is set to use) with the right ownership on every start.
 

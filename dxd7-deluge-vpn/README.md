@@ -7,6 +7,7 @@
 ## Features
 
 - First-run setup page: enter your VPN details once, no file editing
+- Home-screen widgets: torrent counts and your active downloads at a glance
 - All traffic goes through your VPN and is blocked if the tunnel drops
 - PIA with WireGuard out of the box, including a choice of server location
 - Other providers supported through binhex
@@ -42,6 +43,19 @@ In Sonarr and Radarr go to **Settings → Download Clients → Add → Deluge** 
 To find the local path, look at the `volumes:` section of the app's `docker-compose.yml` (for example `Apps/radarr/docker-compose.yml`). The Host must match the container name above, so update the mapping if you ever reinstall under a different app ID.
 
 Radarr and Sonarr note that mappings are rarely needed when paths already match, and that is the better setup. Here the paths differ because binhex's image keeps downloads at `/data`, so a mapping is the practical fix. Hardlinks still work as long as the download folder and your library are on the same filesystem and visible to Radarr/Sonarr.
+
+## Home-screen widgets
+
+Right-click (or long-press) the Umbrel home screen, choose **Edit widgets**, and add the DelugeVPN widgets:
+
+| Widget | Shows |
+|---|---|
+| Torrent counts | Downloading, Seeding, Paused and Queued |
+| Active torrents | Up to three torrents with progress, name, and down/up speed |
+
+A small helper container (`widget-server`) provides the data. It logs in to Deluge's daemon with Deluge's own credentials, so no extra password is stored.
+
+The widgets show torrent names on your Umbrel home screen. To hide them, set `WIDGET_SHOW_NAMES=no` on the `widget-server` service in `Apps/dxd7-deluge-vpn/docker-compose.yml` and restart the app. App updates reset that file, so repeat the edit after updating.
 
 ## Choosing a server (PIA with WireGuard)
 
@@ -106,6 +120,7 @@ If those folders don't exist yet, start and stop the app once to create them. Th
 <details>
 <summary><b>What this package does, and what to know</b></summary>
 
+- **Widget helper:** a second container (the same binhex image) mounts the app's data folder read-only and only reads Deluge's `auth` file to connect to the daemon. It publishes no ports; Umbrel reaches it over its internal network.
 - **Kill switch:** `VPN_ENABLED` is fixed to `yes` and can't be turned off from `vpn.env`. binhex's firewall rules block traffic if the tunnel drops.
 - **Deluge's password is the only login:** anyone on your network who can reach the app can see the page, so change the default `deluge` password right after installing. To also require your Umbrel login, remove the `PROXY_AUTH_ADD: "false"` line in `docker-compose.yml`.
 - **Setup page exposure:** until you fill in the setup page, anyone on your network who opens the app first could enter their own VPN login. Do the setup right after installing.
@@ -128,6 +143,7 @@ The app follows binhex's `2.2` release line. To pick up a newer build of that li
 | Umbrel shows an error page after saving the setup form | Normal while the VPN connects and Deluge starts (a minute or two). Wait and refresh |
 | Sonarr/Radarr import fails with "path not found" or similar | Add the remote path mapping described in [Connecting Sonarr, Radarr and Prowlarr](#connecting-sonarr-radarr-and-prowlarr) |
 | App starts but never connects | `VPN_USER` and `VPN_PASS` aren't still `CHANGE_ME`; provider and protocol are correct |
+| Widgets show dashes or "waiting for Deluge" | Wait until Deluge has fully started, then remove the widget and add it again. If it still says "waiting for Deluge", tick **Allow Remote Connections** in Deluge under **Preferences → Daemon**, restart the app, and check the helper's log: `sudo docker logs dxd7-deluge-vpn_widget-server_1` |
 | Server choice ignored | Look for `[dxd7] provider=… server=…` in the app log. The server field only works for PIA with WireGuard |
 | Login fails with a valid password | Try a simple password to rule out special characters |
 | Other apps can't write to downloads | Files are created with permissions `664`/`775`; check the other app runs as user 1000 |

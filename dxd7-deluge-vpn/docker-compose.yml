@@ -54,3 +54,21 @@ services:
       - PUID=1000
       - PGID=1000
     restart: unless-stopped
+
+  # Home-screen widgets. Umbrel fetches widget JSON from "widget-server:3000".
+  # Reuses the binhex image (already downloaded) because it contains Deluge's
+  # own client library, and logs in to the Deluge daemon with the daemon's
+  # credentials from data/auth, so no extra password is stored anywhere.
+  widget-server:
+    image: binhex/arch-delugevpn:2.2
+    command: ["python3", "/widget/widget_server.py"]
+    environment:
+      - DELUGE_HOST=dxd7-deluge-vpn_deluge-vpn_1
+      - DELUGE_DAEMON_PORT=58846
+      - DELUGE_AUTH_FILE=/config/auth
+      # Set to "no" to show "Torrent" instead of torrent names on the home screen.
+      - WIDGET_SHOW_NAMES=yes
+    volumes:
+      - ${APP_DATA_DIR}/widget:/widget:ro
+      - ${APP_DATA_DIR}/data:/config:ro
+    restart: unless-stopped

@@ -2,7 +2,7 @@ manifestVersion: 1
 id: dxd7-deluge-vpn
 category: networking
 name: DelugeVPN
-version: "2.1.1"
+version: "2.2.0"
 tagline: Deluge torrent client with a built-in VPN and kill switch
 icon: https://raw.githubusercontent.com/dxD7/dxD7-Umbrel-store/main/dxd7-deluge-vpn/icon.png
 description: >-
@@ -20,6 +20,12 @@ description: >-
   first login.
 
 
+  HOME-SCREEN WIDGETS: right-click the Umbrel home screen, choose Edit
+  widgets, and add the DelugeVPN widgets to see your download counts and active
+  torrents at a glance. Widgets show torrent names; the README explains how to
+  hide them.
+
+
   This is an unofficial package and is not affiliated with binhex or any VPN
   provider.
 developer: binhex
@@ -32,10 +38,45 @@ gallery: []
 path: ""
 defaultPassword: "deluge"
 releaseNotes: >-
-  Fixes a fresh install showing "Error" for free disk space in Deluge: the
-  incomplete and completed download folders are now created automatically.
-  Also: first-run setup page. Open the app after installing, enter your VPN
-  details, and Deluge starts automatically. Settings are saved in
-  Apps/dxd7-deluge-vpn/data/vpn.env and can still be edited by hand.
+  New: two home-screen widgets, torrent counts and active torrents. Add them
+  from Edit widgets on the Umbrel home screen. If a widget looks empty after
+  updating, remove it and add it again.
+widgets:
+  - id: "torrents"
+    type: "four-stats"
+    refresh: "5s"
+    endpoint: "widget-server:3000/widgets/torrents"
+    link: ""
+    example:
+      type: "four-stats"
+      link: ""
+      items:
+        - title: "Downloading"
+          text: "3"
+          subtext: "torrents"
+        - title: "Seeding"
+          text: "1"
+          subtext: "torrent"
+        - title: "Paused"
+          text: "0"
+          subtext: "torrents"
+        - title: "Queued"
+          text: "2"
+          subtext: "torrents"
+  - id: "active"
+    type: "list"
+    refresh: "5s"
+    endpoint: "widget-server:3000/widgets/active"
+    link: ""
+    example:
+      type: "list"
+      link: ""
+      items:
+        - text: "33% • Ubuntu 22.04.3 amd64 ISO image"
+          subtext: "↓4.4Mbps ↑1.2Mbps"
+        - text: "100% • Ubuntu 21.1.0 amd64 ISO image"
+          subtext: "↓0Mbps ↑78Kbps"
+        - text: "100% • Debian 11.0 amd64 ISO image"
+          subtext: "↓0Mbps ↑827Kbps"
 submitter: dxD7
 submission: https://github.com/dxD7/dxD7-Umbrel-store
