@@ -24,6 +24,7 @@ HTTP_PORT = int(os.environ.get("WIDGET_PORT", "3000"))
 LIST_LIMIT = int(os.environ.get("WIDGET_LIST_LIMIT", "3"))
 SHOW_NAMES = os.environ.get("WIDGET_SHOW_NAMES", "yes").strip().lower() != "no"
 FETCH_TIMEOUT = 6.0
+REFRESH = os.environ.get("WIDGET_REFRESH", "5s")  # Umbrel's own widget servers send this in every response
 POLL_INTERVAL = float(os.environ.get("WIDGET_POLL_SECONDS", "3"))
 STALE_AFTER = 20.0   # seconds before saved data is considered too old to show
 KEYS = ["name", "state", "progress", "download_payload_rate", "upload_payload_rate"]
@@ -76,12 +77,12 @@ def stats_widget(torrents=None, note="waiting for Deluge"):
                 counts[state] += 1
         items = [{"title": label, "text": str(counts[label]), "subtext": plural(counts[label])}
                  for label in STAT_LABELS]
-    return {"type": "four-stats", "link": "", "items": items}
+    return {"type": "four-stats", "refresh": REFRESH, "items": items}
 
 
 def list_widget(torrents=None, note="Waiting for Deluge...", limit=LIST_LIMIT, show_names=SHOW_NAMES):
     if torrents is None:
-        return {"type": "list", "link": "", "items": [], "noItemsText": note}
+        return {"type": "list", "refresh": REFRESH, "items": [], "noItemsText": note}
 
     def sort_key(t):
         return (STATE_ORDER.get(t.get("state"), 6),
@@ -98,7 +99,7 @@ def list_widget(torrents=None, note="Waiting for Deluge...", limit=LIST_LIMIT, s
             "subtext": f"\u2193{fmt_rate(t.get('download_payload_rate'))} "
                        f"\u2191{fmt_rate(t.get('upload_payload_rate'))}",
         })
-    return {"type": "list", "link": "", "items": items, "noItemsText": "No torrents"}
+    return {"type": "list", "refresh": REFRESH, "items": items, "noItemsText": "No torrents"}
 
 
 # ------------------------------------------------------------ Deluge access

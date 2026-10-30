@@ -2,7 +2,7 @@ manifestVersion: 1
 id: dxd7-deluge-vpn-test
 category: networking
 name: DelugeVPN (test)
-version: "2.2.0-beta.2"
+version: "2.2.0-beta.3"
 tagline: TEST build of DelugeVPN with home-screen widgets
 icon: https://raw.githubusercontent.com/dxD7/dxD7-Umbrel-store/main/dxd7-deluge-vpn/icon.png
 description: >-
