@@ -24,6 +24,8 @@ HTTP_PORT = int(os.environ.get("WIDGET_PORT", "3000"))
 LIST_LIMIT = int(os.environ.get("WIDGET_LIST_LIMIT", "3"))
 SHOW_NAMES = os.environ.get("WIDGET_SHOW_NAMES", "yes").strip().lower() != "no"
 FETCH_TIMEOUT = 6.0
+POLL_INTERVAL = float(os.environ.get("WIDGET_POLL_SECONDS", "3"))
+STALE_AFTER = 20.0   # seconds before saved data is considered too old to show
 KEYS = ["name", "state", "progress", "download_payload_rate", "upload_payload_rate"]
 
 STAT_LABELS = ["Downloading", "Seeding", "Paused", "Queued"]
@@ -201,13 +203,64 @@ class DelugeSource:
 _last_log = {"msg": None, "at": 0.0}
 
 
+def log(message):
+    sys.stderr.write(f"[dxd7-widget] {message}\n")
+    sys.stderr.flush()
+
+
 def log_problem(message):
     """Log a problem when it changes, or once a minute while it persists."""
     now = time.time()
     if message != _last_log["msg"] or now - _last_log["at"] > 60:
-        sys.stderr.write(f"[dxd7-widget] {message}\n")
-        sys.stderr.flush()
+        log(message)
         _last_log.update(msg=message, at=now)
+
+
+class Poller(threading.Thread):
+    """Asks Deluge for the torrent list every few seconds and keeps the latest
+    answer, so HTTP requests from Umbrel are answered instantly and never wait
+    on Deluge (a slow or failing connection can't make the widget time out)."""
+
+    def __init__(self, source):
+        super().__init__(daemon=True)
+        self.source = source
+        self.lock = threading.Lock()
+        self.data = None
+        self.updated = 0.0
+        self.healthy = False
+
+    def poll_once(self):
+        try:
+            data = self.source.fetch()
+        except WidgetError as exc:
+            hint = "" if isinstance(self.source, BrokenSource) else (
+                ". If this keeps happening, make sure Deluge is running and "
+                "'Allow Remote Connections' is ticked in Deluge > Preferences > Daemon.")
+            self._failed(f"{exc}{hint}")
+        except Exception as exc:  # noqa: BLE001 - never let the poller die
+            self._failed(f"unexpected error: {exc.__class__.__name__}: {exc}")
+        else:
+            with self.lock:
+                self.data, self.updated = data, time.time()
+            if not self.healthy:
+                log(f"connected to Deluge ({len(data)} torrents)")
+            self.healthy = True
+            _last_log["msg"] = None
+
+    def _failed(self, message):
+        self.healthy = False
+        log_problem(message)
+
+    def run(self):
+        while True:
+            self.poll_once()
+            time.sleep(POLL_INTERVAL)
+
+    def snapshot(self):
+        with self.lock:
+            if self.data is not None and time.time() - self.updated <= STALE_AFTER:
+                return self.data
+        return None
 
 
 ROUTES = {
@@ -216,7 +269,9 @@ ROUTES = {
 }
 
 
-def make_handler(source):
+def make_handler(poller):
+    seen = set()
+
     class Handler(BaseHTTPRequestHandler):
         server_version = "dxd7-widget"
 
@@ -235,27 +290,16 @@ def make_handler(source):
         def do_GET(self):
             path = self.path.split("?", 1)[0].rstrip("/") or "/"
             if path == "/healthz":
-                self._send({"ok": True})
+                self._send({"ok": True, "deluge": poller.healthy})
                 return
             build = ROUTES.get(path)
             if build is None:
                 self._send({"error": "unknown widget"}, 404)
                 return
-            try:
-                torrents = source.fetch()
-            except WidgetError as exc:
-                hint = "" if isinstance(source, BrokenSource) else (
-                    ". If this keeps happening, make sure Deluge is running and "
-                    "'Allow Remote Connections' is ticked in Deluge > Preferences > Daemon.")
-                log_problem(f"{exc}{hint}")
-                self._send(build(None))
-                return
-            except Exception as exc:  # noqa: BLE001 - never crash a widget request
-                log_problem(f"unexpected error: {exc.__class__.__name__}: {exc}")
-                self._send(build(None))
-                return
-            _last_log["msg"] = None
-            self._send(build(torrents))
+            if path not in seen:
+                seen.add(path)
+                log(f"first request for {path} from {self.client_address[0]}")
+            self._send(build(poller.snapshot()))
 
     return Handler
 
@@ -265,10 +309,10 @@ def main():
         source = DelugeSource()
     except Exception as exc:  # noqa: BLE001
         source = BrokenSource(f"cannot load Deluge's client library: {exc.__class__.__name__}: {exc}")
-        log_problem(str(exc))
-    server = ThreadingHTTPServer(("0.0.0.0", HTTP_PORT), make_handler(source))
-    sys.stderr.write(f"[dxd7-widget] serving widgets on port {HTTP_PORT}\n")
-    sys.stderr.flush()
+    poller = Poller(source)
+    poller.start()
+    server = ThreadingHTTPServer(("0.0.0.0", HTTP_PORT), make_handler(poller))
+    log(f"serving widgets on port {HTTP_PORT}")
     server.serve_forever()
 
 

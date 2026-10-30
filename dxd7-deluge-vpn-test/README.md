@@ -19,7 +19,17 @@ widgets, on its own port (8113) so it can run next to the real app.
    tick it, save, and restart the app.
 2. Still nothing? On your Umbrel run
    `sudo docker logs dxd7-deluge-vpn-test_widget-server_1 2>&1 | tail -20`
-   and send the output (it contains no passwords).
+   and send the output (it contains no passwords). Healthy output looks like:
+
+   ```
+   [dxd7-widget] serving widgets on port 3000
+   [dxd7-widget] first request for /widgets/torrents from 10.21.0.1
+   [dxd7-widget] connected to Deluge (3 torrents)
+   ```
+
+   - No "first request" line: Umbrel isn't reaching the widget server.
+   - A repeating error line: the widget server can't talk to Deluge's daemon.
+   - "connected" but still dashes on the home screen: tell me, it's an Umbrel-side issue.
 
 ## Widgets
 
