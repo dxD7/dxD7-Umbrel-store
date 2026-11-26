@@ -2,7 +2,7 @@ manifestVersion: 1
 id: dxd7-deluge-vpn
 category: networking
 name: DelugeVPN
-version: "2.2.0"
+version: "2.2.1"
 tagline: Deluge torrent client with a built-in VPN and kill switch
 icon: https://raw.githubusercontent.com/dxD7/dxD7-Umbrel-store/main/dxd7-deluge-vpn/icon.png
 description: >-
@@ -38,9 +38,12 @@ gallery: []
 path: ""
 defaultPassword: "deluge"
 releaseNotes: >-
-  New: two home-screen widgets, torrent counts and active torrents. Add them
-  from Edit widgets on the Umbrel home screen. If a widget looks empty after
-  updating, remove it and add it again.
+  Fix: PIA .privacy.network endpoints don't support port forwarding, so with
+  the default strict setting Deluge never started and the app refused
+  connections. The app now checks your endpoint against PIA's port-forward
+  list and switches to the .pvt.site equivalent automatically (it logs the
+  change). The setup page, docs, and the default server now use
+  port-forwarding endpoints only.
 widgets:
   - id: "torrents"
     type: "four-stats"

@@ -59,7 +59,7 @@ The widgets show torrent names on your Umbrel home screen. To hide them, set `WI
 
 ## Choosing a server (PIA with WireGuard)
 
-The setup page lists PIA locations that support port forwarding, loaded live from PIA with a short built-in list as a fallback. If you don't pick one, PIA connects to Amsterdam (binhex's default). You can also choose **Other** and type any PIA hostname, for example `ca-montreal.privacy.network`.
+The setup page lists PIA locations that support port forwarding, loaded live from PIA with a short built-in list as a fallback. If you don't pick one, PIA connects to the default Amsterdam endpoint (`netherlands.pvt.site`). You can also choose **Other** and type any PIA hostname, for example `ca-montreal.pvt.site`. Only `.pvt.site` endpoints support port forwarding; if you set a `.privacy.network` endpoint with `STRICT_PORT_FORWARD=yes`, the app switches to its `.pvt.site` equivalent automatically and logs it.
 
 ## Settings
 
@@ -86,8 +86,8 @@ Edit `vpn.env` in the Umbrel Files app and restart the app.
 |---|---|
 | Fix a wrong username or password | Edit `VPN_USER` / `VPN_PASS`, restart |
 | Run the setup page again | Delete `vpn.env` (or set `VPN_USER` to `CHANGE_ME`), restart, open the app |
-| Change PIA server (WireGuard) | Add or edit `VPN_REMOTE_SERVER="ca-montreal.privacy.network"`, restart |
-| Go back to the default server | Set `VPN_REMOTE_SERVER="nl-amsterdam.privacy.network"`, restart |
+| Change PIA server (WireGuard) | Add or edit `VPN_REMOTE_SERVER="ca-montreal.pvt.site"`, restart |
+| Go back to the default server | Set `VPN_REMOTE_SERVER="netherlands.pvt.site"`, restart |
 
 Removing the `VPN_REMOTE_SERVER` line does not switch you back to Amsterdam. Once PIA's config has been generated, the app keeps the server it last used.
 
@@ -143,6 +143,7 @@ The app follows binhex's `2.2` release line. To pick up a newer build of that li
 | Umbrel shows an error page after saving the setup form | Normal while the VPN connects and Deluge starts (a minute or two). Wait and refresh |
 | Sonarr/Radarr import fails with "path not found" or similar | Add the remote path mapping described in [Connecting Sonarr, Radarr and Prowlarr](#connecting-sonarr-radarr-and-prowlarr) |
 | App starts but never connects | `VPN_USER` and `VPN_PASS` aren't still `CHANGE_ME`; provider and protocol are correct |
+| Deluge never starts, container looks ready | Look for `[dxd7] ... does not support port forwarding` in the log. A `.privacy.network` endpoint can't forward a port, so with `STRICT_PORT_FORWARD=yes` the daemon never starts; the app now switches such endpoints automatically |
 | Widgets show dashes or "waiting for Deluge" | Wait until Deluge has fully started, then remove the widget and add it again. If it still says "waiting for Deluge", tick **Allow Remote Connections** in Deluge under **Preferences → Daemon**, restart the app, and check the helper's log: `sudo docker logs dxd7-deluge-vpn_widget-server_1` |
 | Server choice ignored | Look for `[dxd7] provider=… server=…` in the app log. The server field only works for PIA with WireGuard |
 | Login fails with a valid password | Try a simple password to rule out special characters |

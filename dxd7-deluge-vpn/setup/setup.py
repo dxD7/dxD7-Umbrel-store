@@ -43,10 +43,10 @@ DEFAULTS = {
 # can't be loaded. Hostnames come from the port-forwarding list in binhex's log.
 # Free text is always accepted.
 SERVER_SUGGESTIONS = [
-    ("ca-montreal.privacy.network", "Canada, Montreal"),
-    ("ca-vancouver.privacy.network", "Canada, Vancouver"),
+    ("ca-montreal.pvt.site", "Canada, Montreal"),
+    ("ca-vancouver.pvt.site", "Canada, Vancouver"),
     ("ca-toronto.pvt.site", "Canada, Toronto"),
-    ("nl-amsterdam.privacy.network", "Netherlands, Amsterdam (default)"),
+    ("netherlands.pvt.site", "Netherlands, Amsterdam (default)"),
     ("uk-london.pvt.site", "UK, London"),
     ("de-frankfurt.pvt.site", "Germany, Frankfurt"),
     ("france.pvt.site", "France"),
@@ -201,8 +201,8 @@ summary {{ cursor:pointer; color:var(--muted); font-size:.9rem; }}
 <div id="serverrow">
 <label for="srvpick">Server location (optional)</label>
 <select id="srvpick" name="VPN_REMOTE_SERVER">{server_options}</select>
-<input id="srvcustom" name="VPN_REMOTE_SERVER_CUSTOM" value="{custom_value}" placeholder="e.g. ca-montreal.privacy.network" autocomplete="off" autocapitalize="off" spellcheck="false" style="margin-top:.5rem">
-<small>PIA with WireGuard only. {server_note} It must support port forwarding.</small>
+<input id="srvcustom" name="VPN_REMOTE_SERVER_CUSTOM" value="{custom_value}" placeholder="e.g. ca-montreal.pvt.site" autocomplete="off" autocapitalize="off" spellcheck="false" style="margin-top:.5rem">
+<small>PIA with WireGuard only. {server_note} It must support port forwarding (only .pvt.site endpoints do).</small>
 </div>
 <label for="user">VPN username</label>
 <input id="user" name="VPN_USER" autocomplete="off" autocapitalize="off" spellcheck="false">
@@ -289,7 +289,7 @@ def validate(form):
         return None, "DNS servers must be IP addresses separated by commas."
     if prov == "pia" and client == "wireguard":
         if server and not SERVER_RE.match(server):
-            return None, "Server location must be a hostname like ca-montreal.privacy.network."
+            return None, "Server location must be a hostname like ca-montreal.pvt.site."
     else:
         server = ""  # only PIA + WireGuard supports choosing a server here
     return {"VPN_PROV": prov, "VPN_CLIENT": client, "VPN_USER": user,
@@ -316,7 +316,7 @@ def write_env(new):
         "# To change them, edit this file and restart the app.",
         "# One pair of outer quotes around a value is allowed; $ is taken literally.",
         "# PIA + WireGuard: to change server, add a line such as",
-        '#   VPN_REMOTE_SERVER="ca-montreal.privacy.network"',
+        '#   VPN_REMOTE_SERVER="ca-montreal.pvt.site"',
         "# and restart the app.",
         "",
     ] + [f'{k}="{v}"' for k, v in values.items()

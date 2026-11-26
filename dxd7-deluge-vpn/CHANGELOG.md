@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.1
+- Fix: with `STRICT_PORT_FORWARD=yes` (the default), a PIA endpoint that can't be port-forwarded left the Deluge daemon unstarted — the container looked ready but refused every connection. PIA only port-forwards its `.pvt.site` endpoints, but the previous default (`nl-amsterdam.privacy.network`), the setup page's built-in fallback list, and the docs' examples all used `.privacy.network` hostnames.
+- The startup wrapper now checks the endpoint against PIA's live port-forward list and switches to the port-forwarding equivalent (`.privacy.network` → `.pvt.site`, e.g. `ca-montreal.privacy.network` → `ca-montreal.pvt.site`), logging the change. The default is now `netherlands.pvt.site` (same Amsterdam region).
+- Setup page fallback list, form hints, and docs now use port-forwarding hostnames only.
+
 ## 2.2.0
 - New: two Umbrel home-screen widgets, torrent counts (four-stats) and active torrents (list).
 - Provided by a small `widget-server` helper that reads Deluge through its own daemon credentials, so no extra password is stored. It answers from a background poll, so Umbrel never waits on Deluge.

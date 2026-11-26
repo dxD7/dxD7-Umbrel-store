@@ -55,7 +55,10 @@ patch_binhex() {
   fi
   if grep -qF 'export VPN_REMOTE_SERVER="nl-amsterdam.privacy.network"' "$f"; then
     cp "$f" "$f.dxd7.bak"
-    sed -i 's|export VPN_REMOTE_SERVER="nl-amsterdam\.privacy\.network"|export VPN_REMOTE_SERVER="${VPN_REMOTE_SERVER:-nl-amsterdam.privacy.network}"|g' "$f"
+    # Fallback is a port-forwarding endpoint: PIA only port-forwards its
+    # .pvt.site servers, and with STRICT_PORT_FORWARD=yes Deluge never
+    # starts on any other endpoint.
+    sed -i 's|export VPN_REMOTE_SERVER="nl-amsterdam\.privacy\.network"|export VPN_REMOTE_SERVER="${VPN_REMOTE_SERVER:-netherlands.pvt.site}"|g' "$f"
     if bash -n "$f" 2>/dev/null; then
       rm -f "$f.dxd7.bak"
       echo "[dxd7] patched binhex init.sh so your server choice is honored"
@@ -63,7 +66,8 @@ patch_binhex() {
       mv "$f.dxd7.bak" "$f"
       echo "[dxd7] patch failed the syntax check and was reverted"
     fi
-  elif grep -qF '${VPN_REMOTE_SERVER:-nl-amsterdam.privacy.network}' "$f"; then
+  elif grep -qF '${VPN_REMOTE_SERVER:-nl-amsterdam.privacy.network}' "$f" \
+    || grep -qF '${VPN_REMOTE_SERVER:-netherlands.pvt.site}' "$f"; then
     echo "[dxd7] binhex init.sh already honors your server choice"
   else
     echo "[dxd7] binhex init.sh has no fixed default server - nothing to patch"
@@ -89,6 +93,37 @@ sync_endpoint() {
     sed -i "s|^Endpoint[[:space:]]*=.*|Endpoint = ${VPN_REMOTE_SERVER}:${port:-1337}|" "$WG_CONF"
     echo "[dxd7] changed wg0.conf endpoint from $current to $VPN_REMOTE_SERVER"
   fi
+}
+
+# With STRICT_PORT_FORWARD=yes binhex waits for a forwarded port before
+# starting Deluge. PIA only port-forwards its .pvt.site endpoints, so on any
+# other endpoint the daemon never starts: the container looks ready but
+# refuses every connection. Check the endpoint against PIA's live list and
+# switch to the port-forwarding equivalent when possible (PIA's city
+# endpoints have 1:1 .pvt.site twins, e.g. ca-montreal.privacy.network ->
+# ca-montreal.pvt.site).
+fix_port_forward_server() {
+  [ "$VPN_PROV" = "pia" ] || return 0
+  [ "${STRICT_PORT_FORWARD:-no}" = "yes" ] || return 0
+  [ -n "$VPN_REMOTE_SERVER" ] || return 0
+  local list
+  list="$(curl --silent --insecure --max-time 10 'https://serverlist.piaservers.net/vpninfo/servers/v4' 2>/dev/null \
+    | jq -r '.regions[] | select(.port_forward==true) | .dns' 2>/dev/null)"
+  if [ -z "$list" ]; then
+    echo "[dxd7] could not load PIA's port-forward list - keeping endpoint ${VPN_REMOTE_SERVER}"
+    return 0
+  fi
+  if echo "$list" | grep -qx "$VPN_REMOTE_SERVER"; then
+    return 0
+  fi
+  local twin="${VPN_REMOTE_SERVER%.privacy.network}.pvt.site"
+  if [ "$twin" != "$VPN_REMOTE_SERVER" ] && echo "$list" | grep -qx "$twin"; then
+    echo "[dxd7] ${VPN_REMOTE_SERVER} does not support port forwarding - using ${twin} instead"
+    export VPN_REMOTE_SERVER="$twin"
+    return 0
+  fi
+  echo "[dxd7] ${VPN_REMOTE_SERVER} does not support port forwarding - using netherlands.pvt.site instead"
+  export VPN_REMOTE_SERVER="netherlands.pvt.site"
 }
 
 # Makes sure Deluge's download folders exist and are writable on every start.
@@ -141,6 +176,7 @@ done
 # The VPN (and its kill switch) can never be switched off from vpn.env.
 export VPN_ENABLED=yes
 
+fix_port_forward_server
 patch_binhex
 sync_endpoint
 ensure_data_dirs
